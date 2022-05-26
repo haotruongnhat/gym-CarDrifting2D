@@ -1,76 +1,88 @@
 import gym
-from gym.envs.classic_control import rendering
 import numpy as np
 import math
 import shapely
 from shapely.geometry import LineString, Point
 from gym.envs.registration import register
+import pygame
 
-walls = []
+WINDOW_W = 1500
+WINDOW_H = 1000
+FPS = 50  # Frames per second
 
-walls.append([240, 809, 200, 583])
-walls.append([200, 583, 218, 395])
-walls.append([218, 395, 303, 255])
-walls.append([303, 255, 548, 173])
-walls.append([548, 173, 764, 179])
-walls.append([764, 179, 1058, 198])
-walls.append([1055, 199, 1180, 215])
-walls.append([1177, 215, 1220, 272])
-walls.append([1222, 273, 1218, 367])
-walls.append([1218, 367, 1150, 437])
-walls.append([1150, 437, 1044, 460])
-walls.append([1044, 460, 757, 600])
-walls.append([757, 600, 1099, 570])
-walls.append([1100, 570, 1187, 508])
-walls.append([1187, 507, 1288, 443])
-walls.append([1288, 443, 1463, 415])
-walls.append([1463, 415, 1615, 478])
-walls.append([1617, 479, 1727, 679])
-walls.append([1727, 679, 1697, 874])
-walls.append([1694, 872, 1520, 964])
-walls.append([1520, 964, 1100, 970])
-walls.append([1105, 970, 335, 960])
-walls.append([339, 960, 264, 899])
-walls.append([263, 897, 238, 803])
-walls.append([317, 782, 274, 570])
-walls.append([275, 569, 284, 407])
-walls.append([284, 407, 363, 317])
-walls.append([363, 317, 562, 240])
-walls.append([562, 240, 1114, 284])
-walls.append([1114, 284, 1120, 323])
-walls.append([1120, 323, 1045, 377])
-walls.append([1045, 378, 682, 548])
-walls.append([682, 548, 604, 610])
-walls.append([604, 612, 603, 695])
-walls.append([605, 695, 702, 713])
-walls.append([703, 712, 1128, 642])
-walls.append([1129, 642, 1320, 512])
-walls.append([1323, 512, 1464, 497])
-walls.append([1464, 497, 1579, 535])
-walls.append([1579, 535, 1660, 701])
-walls.append([1660, 697, 1634, 818])
-walls.append([1634, 818, 1499, 889])
-walls.append([1499, 889, 395, 883])
-walls.append([395, 883, 330, 838])
-walls.append([330, 838, 315, 782])
-walls.append([319, 798, 306, 725])
-walls.append([276, 580, 277, 543])
-walls.append([603, 639, 622, 590])
-walls.append([599, 655, 621, 704])
-walls.append([1074, 571, 1115, 558])
-walls.append([1314, 516, 1333, 511])
-walls.append([1692, 875, 1706, 830])
-walls.append([277, 912, 255, 872])
-walls.append([1214, 262, 1225, 288])
-walls.append([1601, 470, 1625, 490])
-walls.append([1119, 644, 1139, 634])
-walls.append([687, 710, 719, 710])
-walls.append([1721, 664, 1727, 696])
-walls.append([1015, 392, 1065, 362])
-walls.append([1091, 572, 1104, 568])
-walls.append([1157, 528, 1233, 478])
+DEFAULT_MAP = True
 
-map = walls
+if DEFAULT_MAP:
+
+    walls = []
+
+    walls.append([240, 809, 200, 583])
+    walls.append([200, 583, 218, 395])
+    walls.append([218, 395, 303, 255])
+    walls.append([303, 255, 548, 173])
+    walls.append([548, 173, 764, 179])
+    walls.append([764, 179, 1058, 198])
+    walls.append([1055, 199, 1180, 215])
+    walls.append([1177, 215, 1220, 272])
+    walls.append([1222, 273, 1218, 367])
+    walls.append([1218, 367, 1150, 437])
+    walls.append([1150, 437, 1044, 460])
+    walls.append([1044, 460, 757, 600])
+    walls.append([757, 600, 1099, 570])
+    walls.append([1100, 570, 1187, 508])
+    walls.append([1187, 507, 1288, 443])
+    walls.append([1288, 443, 1463, 415])
+    walls.append([1463, 415, 1615, 478])
+    walls.append([1617, 479, 1727, 679])
+    walls.append([1727, 679, 1697, 874])
+    walls.append([1694, 872, 1520, 964])
+    walls.append([1520, 964, 1100, 970])
+    walls.append([1105, 970, 335, 960])
+    walls.append([339, 960, 264, 899])
+    walls.append([263, 897, 238, 803])
+    walls.append([317, 782, 274, 570])
+    walls.append([275, 569, 284, 407])
+    walls.append([284, 407, 363, 317])
+    walls.append([363, 317, 562, 240])
+    walls.append([562, 240, 1114, 284])
+    walls.append([1114, 284, 1120, 323])
+    walls.append([1120, 323, 1045, 377])
+    walls.append([1045, 378, 682, 548])
+    walls.append([682, 548, 604, 610])
+    walls.append([604, 612, 603, 695])
+    walls.append([605, 695, 702, 713])
+    walls.append([703, 712, 1128, 642])
+    walls.append([1129, 642, 1320, 512])
+    walls.append([1323, 512, 1464, 497])
+    walls.append([1464, 497, 1579, 535])
+    walls.append([1579, 535, 1660, 701])
+    walls.append([1660, 697, 1634, 818])
+    walls.append([1634, 818, 1499, 889])
+    walls.append([1499, 889, 395, 883])
+    walls.append([395, 883, 330, 838])
+    walls.append([330, 838, 315, 782])
+    walls.append([319, 798, 306, 725])
+    walls.append([276, 580, 277, 543])
+    walls.append([603, 639, 622, 590])
+    walls.append([599, 655, 621, 704])
+    walls.append([1074, 571, 1115, 558])
+    walls.append([1314, 516, 1333, 511])
+    walls.append([1692, 875, 1706, 830])
+    walls.append([277, 912, 255, 872])
+    walls.append([1214, 262, 1225, 288])
+    walls.append([1601, 470, 1625, 490])
+    walls.append([1119, 644, 1139, 634])
+    walls.append([687, 710, 719, 710])
+    walls.append([1721, 664, 1727, 696])
+    walls.append([1015, 392, 1065, 362])
+    walls.append([1091, 572, 1104, 568])
+    walls.append([1157, 528, 1233, 478])
+
+    map = walls
+else:
+    
+
+
 reward_gates = [[613, 268, 613, 156], [546, 272, 465, 168], [483, 298, 368, 179], [411, 316, 301, 248], [363, 342, 231, 306], [324, 393, 189, 381], [299, 447, 189, 473], [291, 517, 187, 568], [305, 585, 213, 647], [213, 710, 325, 708], [222, 816, 352, 772], [260, 927, 359, 840], [361, 971, 416, 858], [475, 979, 490, 852], [578, 980, 578, 880], [643, 979, 646, 869], [718, 984, 713, 870], [778, 979, 787, 887], [852, 978, 876, 877], [958, 983, 972, 867], [1040, 976, 1051, 883], [1095, 977, 1126, 860], [1159, 983, 1191, 871], [1222, 980, 1240, 877], [1284, 973, 1297, 877], [1367, 980, 1374, 884], [1452, 975, 1445, 883], [1540, 967, 1507, 873], [1626, 929, 1577, 822], [1716, 835, 1630, 771], [1733, 736, 1646, 703], [1618, 667, 1716, 602], [1598, 611, 1681, 526], [1547, 554, 1597, 441], [1467, 528, 1495, 423], [1392, 529, 1370, 422], [1323, 541, 1256, 450], [1261, 575, 1175, 493], [1155, 642, 1087, 525], [1025, 678, 1026, 557], [923, 699, 930, 569], [807, 707, 841, 600], [701, 711, 746, 627], [611, 657, 720, 591], [719, 509, 809, 571], [862, 542, 813, 480], [932, 521, 919, 445], [1030, 473, 966, 378], [1113, 454, 1065, 364], [1215, 386, 1102, 330], [1099, 298, 1225, 260], [1047, 287, 1087, 191], [949, 288, 958, 187], [856, 284, 854, 179], [761, 275, 759, 167]]
 
 downScaleFactor = 1.1
@@ -89,15 +101,21 @@ for i in range(len(reward_gates)):
 
 
 class Drifting(gym.Env):
-    metadata = {"render.modes": ["human"]}
+    metadata = {
+        "render_modes": ["human", "rgb_array", "state_pixels"],
+        "render_fps": FPS,
+    }
+
     def __init__(self):
-        self.viewer = None
+        self.screen = None
+        self.surf = None
+        self.clock = None
         self.pos = [650, 200]
         self.velX = 0
         self.velY = 0
-        self.drag = 0.9
+        self.drag = 0.0
         self.angularVel = 0.0
-        self.angularDrag = 0.6
+        self.angularDrag = 0.0
         self.power = 0.7
         self.turnSpeed = 0.04
         self.angle = math.radians(-90)
@@ -108,31 +126,19 @@ class Drifting(gym.Env):
         self.states = 12
         self.actions = 9
 
+        self.state = None
+        self.reward = None
+        self.ray_casting = []
+
     def step(self, action):
+        self.turn(action[0])
+        self.acc(action[1])
 
-        if (action == 0):
-            self.acc()
-        if (action == 1):
-            self.decc()
-        if (action == 2):
-            self.left()
-        if (action == 3):
-            self.right()
+        # if action[1] > 0:
+        #     self.acc(action[1])
 
-        if (action==4):
-            self.acc()
-            self.left()
-        if (action==5):
-            self.acc()
-            self.right()
-
-        if (action==6):
-            self.decc()
-            self.left()
-        if (action==7):
-            self.decc()
-            self.right()
-
+        # if action[2] > 0:
+        #     self.decc(action[1])
 
         self.pos[0] += self.velX
         self.pos[1] += self.velY
@@ -159,50 +165,69 @@ class Drifting(gym.Env):
 
         if (ded):
             reward = -1
+            
         state = self.getState()
-
+        self.state = state
+        self.reward = reward
+        
         return state, reward, ded, None
 
-    def render(self):
-        if self.viewer is None:
-            self.viewer = rendering.Viewer(1500, 1000)
-            LIST = [[5, 10, 5, -10], [-5, 10, -5, -10], [5, 10, -5, 10], [5, -10, -5, -10]]
-            verts = []
-            for i in LIST:
-                LINE = self.rotatePos(i[0], i[1], i[2], i[3], self.angle)
+    def render(self, mode: str = "human"):
+        import pygame
+        from pygame import gfxdraw
 
-                self.viewer.draw_line([LINE[0], LINE[1]], [LINE[2], LINE[3]], color=(255, 0, 0))
-                verts.append((LINE[0], LINE[1]))
-                verts.append((LINE[2], LINE[3]))
+        pygame.font.init()
 
-            CAR = rendering.make_polygon(verts)
-            self.viewer.add_geom(CAR)
+        if self.screen is None:
+            pygame.init()
+            pygame.display.init()
 
-            for LINE in map:
-                Line = rendering.make_polyline([(LINE[0], LINE[1]), (LINE[2], LINE[3])])
-                Line.set_linewidth(5)
-                self.viewer.add_geom(Line)
+            self.screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
 
-
+        if self.clock is None:
+            self.clock = pygame.time.Clock()          
+        
+        self.surf = pygame.Surface((WINDOW_W, WINDOW_H))
+        field = [
+            (WINDOW_W, WINDOW_H),
+            (WINDOW_W, -WINDOW_H),
+            (-WINDOW_W, -WINDOW_H),
+            (-WINDOW_W, WINDOW_H),
+        ]
+        gfxdraw.filled_polygon(self.surf, field, np.array([102, 204, 102]))
 
         LIST = [[5, 10, 5, -10], [-5, 10, -5, -10], [5, 10, -5, 10], [5, -10, -5, -10]]
         verts = []
         for i in LIST:
-            LINE = self.rotatePos(i[0], i[1], i[2], i[3], self.angle)
+            LINE = [int(v) for v in self.rotatePos(i[0], i[1], i[2], i[3], self.angle)]
+
+            gfxdraw.line(self.surf, LINE[0], LINE[1], LINE[2], LINE[3], np.array([255, 0, 0]))
+            # self.viewer.draw_line([LINE[0], LINE[1]], [LINE[2], LINE[3]], color=(255, 0, 0))
             verts.append((LINE[0], LINE[1]))
             verts.append((LINE[2], LINE[3]))
 
+        color = np.array([0.0, 0.0, 0.0])
+        gfxdraw.aapolygon(self.surf, verts, color)
+        gfxdraw.filled_polygon(self.surf, verts, color)
 
+        for LINE in map:
+            LINE = [int(v) for v in LINE]
 
-        CAR = rendering.make_polygon(verts)
-        self.viewer.geoms[0] = CAR
+            gfxdraw.line(self.surf, LINE[0], LINE[1], LINE[2], LINE[3], np.array([0, 0, 0]))
 
+        for LINE in self.ray_casting:
+            gfxdraw.line(self.surf, int(LINE[0]), int(LINE[1]), int(LINE[2]), int(LINE[3]), np.array([255, 0, 0]))
 
+        pygame.event.pump()
+        self.clock.tick(self.metadata["render_fps"])
+        self.screen.fill(0)
+        self.screen.blit(self.surf, (0, 0))
+        pygame.display.flip()
 
-
-        self.viewer.render()
+        return True
 
     def reset(self):
+
         self.pos = [650, 200]
         self.velX = 0
         self.velY = 0
@@ -215,11 +240,12 @@ class Drifting(gym.Env):
         self.w = 10
         self.h = 20
         self.on = 0
+
         return self.getState()
 
-    def acc(self):
-        self.velX += math.sin(self.angle) * self.power
-        self.velY += math.cos(self.angle) * self.power
+    def acc(self, value):
+        self.velX += math.sin(self.angle) * value #self.power
+        self.velY += math.cos(self.angle) * value #self.power
 
         if (self.velX > 10):
             self.velX = 10
@@ -227,21 +253,30 @@ class Drifting(gym.Env):
         if (self.velY > 10):
             self.velY = 10
 
-    def decc(self):
-        self.velX -= math.sin(self.angle) * self.power
-        self.velY -= math.cos(self.angle) * self.power
-
         if (self.velX < -10):
             self.velX = -10
 
         if (self.velY < -10):
             self.velY = -10
 
-    def right(self):
-        self.angularVel += self.turnSpeed
+    # def decc(self, value):
+    #     self.velX -= math.sin(self.angle) * self.power
+    #     self.velY -= math.cos(self.angle) * self.power
 
-    def left(self):
-        self.angularVel -= self.turnSpeed
+    #     if (self.velX < -10):
+    #         self.velX = -10
+
+    #     if (self.velY < -10):
+    #         self.velY = -10
+
+    def turn(self, value):
+        self.angularVel += value*self.turnSpeed
+
+    # def right(self, value):
+    #     self.angularVel += self.turnSpeed
+
+    # def left(self, value):
+    #     self.angularVel -= self.turnSpeed
 
     def LineInter(self, L1, L2):
         A = (L1[0], L1[1])
@@ -298,10 +333,13 @@ class Drifting(gym.Env):
         return [New_X, New_Y, New_X2, New_Y2]
 
     def getState(self):
+        from pygame import gfxdraw
 
-        LIST = [[0, 0, 1000, 0], [0, 0, -1000, 0], [0, 0, -1000, 1000], [0, 0, 0, 1000], [0, 0, 1000, 1000]]
+        range = 10000
+        LIST = [[0, 0, range, 0], [0, 0, -range, 0], [0, 0, -range, range], [0, 0, 0, range], [0, 0, range, range]]
         DS = []
         bongs = []
+        self.ray_casting = []
         for i in LIST:
             closest = 10000000
             closesIN = []
@@ -317,11 +355,7 @@ class Drifting(gym.Env):
                         closesIN = inter
 
             if (len(closesIN) > 0):
-                # pyglet.graphics.draw(2, pyglet.gl.GL_LINES,
-                #                      ("v2f", (LINE[0], LINE[1], closesIN[0], closesIN[1]))
-                #                      , ('c3B', [255, 255, 255] * 2))
-                if (not self.viewer is None):
-                    self.viewer.draw_line([LINE[0], LINE[1]], [closesIN[0], closesIN[1]])
+                self.ray_casting.append((int(LINE[0]), int(LINE[1]), int(closesIN[0]), int(closesIN[1])))
                 bongs.append([LINE[0], LINE[1], closesIN[0], closesIN[1]])
                 DS.append(closest)
             else:
@@ -367,6 +401,56 @@ class Drifting(gym.Env):
 
         return normal_array
 
+if __name__ == "__main__":
+    import pygame
+    a = np.array([0.0, 0.0])
+
+    def register_input():
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    a[0] = +1.0
+                if event.key == pygame.K_RIGHT:
+                    a[0] = -1.0
+                if event.key == pygame.K_UP:
+                    a[1] = +1.0
+                if event.key == pygame.K_DOWN:
+                    a[1] = -0.8
+                if event.key == pygame.K_RETURN:
+                    global restart
+                    restart = True
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:
+                    a[0] = 0
+                if event.key == pygame.K_RIGHT:
+                    a[0] = 0
+                if event.key == pygame.K_UP:
+                    a[1] = 0
+                if event.key == pygame.K_DOWN:
+                    a[1] = 0
+
+    env = Drifting()
+    env.render()
+
+    isopen = True
+    while isopen:
+        env.reset()
+        total_reward = 0.0
+        steps = 0
+        restart = False
+        while True:
+            register_input()
+            s, r, done, info = env.step(a)
+            total_reward += r
+            if steps % 200 == 0 or done:
+                print("\naction " + str([f"{x:+0.2f}" for x in a]))
+                print(f"step {steps} total_reward {total_reward:+0.2f}")
+            steps += 1
+            isopen = env.render()
+            if done or restart or isopen is False:
+                break
+    env.close()
 
 register(
     id='CarDrifting2D-v0',

@@ -5,12 +5,25 @@ import shapely
 from shapely.geometry import LineString, Point
 from gym.envs.registration import register
 import pygame
+from pygame import gfxdraw
+from lib.dr2_load_data import get_track
 
 WINDOW_W = 1500
 WINDOW_H = 1000
 FPS = 50  # Frames per second
 
-DEFAULT_MAP = True
+GLOBAL_SCALING_FACTOR = 0.5
+GLOBAL_OFFSET_X = 0 
+GLOBAL_OFFSET_Y = 0
+INITIAL_POSITION = [0, 0]
+
+LOCAL_SCALING_FACTOR = 5
+LOCAL_FOV_RANGE = 50
+
+CAR_LENGTH = 4.37388 / 2
+CAR_WIDTH = 1.7 / 2
+
+DEFAULT_MAP = False
 
 if DEFAULT_MAP:
 
@@ -79,26 +92,66 @@ if DEFAULT_MAP:
     walls.append([1157, 528, 1233, 478])
 
     map = walls
+    reward_gates = [[613, 268, 613, 156], [546, 272, 465, 168], [483, 298, 368, 179], [411, 316, 301, 248], [363, 342, 231, 306], [324, 393, 189, 381], [299, 447, 189, 473], [291, 517, 187, 568], [305, 585, 213, 647], [213, 710, 325, 708], [222, 816, 352, 772], [260, 927, 359, 840], [361, 971, 416, 858], [475, 979, 490, 852], [578, 980, 578, 880], [643, 979, 646, 869], [718, 984, 713, 870], [778, 979, 787, 887], [852, 978, 876, 877], [958, 983, 972, 867], [1040, 976, 1051, 883], [1095, 977, 1126, 860], [1159, 983, 1191, 871], [1222, 980, 1240, 877], [1284, 973, 1297, 877], [1367, 980, 1374, 884], [1452, 975, 1445, 883], [1540, 967, 1507, 873], [1626, 929, 1577, 822], [1716, 835, 1630, 771], [1733, 736, 1646, 703], [1618, 667, 1716, 602], [1598, 611, 1681, 526], [1547, 554, 1597, 441], [1467, 528, 1495, 423], [1392, 529, 1370, 422], [1323, 541, 1256, 450], [1261, 575, 1175, 493], [1155, 642, 1087, 525], [1025, 678, 1026, 557], [923, 699, 930, 569], [807, 707, 841, 600], [701, 711, 746, 627], [611, 657, 720, 591], [719, 509, 809, 571], [862, 542, 813, 480], [932, 521, 919, 445], [1030, 473, 966, 378], [1113, 454, 1065, 364], [1215, 386, 1102, 330], [1099, 298, 1225, 260], [1047, 287, 1087, 191], [949, 288, 958, 187], [856, 284, 854, 179], [761, 275, 759, 167]]
+    downScaleFactor = 1.1
+
+    for i in range(len(map)):
+        for j in range(len(map[i])):
+            map[i][j] = map[i][j]/downScaleFactor
+            map[i][0] -= 20
+            map[i][2] -= 20
+
+    for i in range(len(reward_gates)):
+        for j in range(len(reward_gates[i])):
+            reward_gates[i][j] = reward_gates[i][j]/downScaleFactor
+            reward_gates[i][0] -= 20
+            reward_gates[i][2] -= 20
 else:
-    
+    path = "map_data\\GR_Argolis_Fourketa Kourva_{}.npz"
 
+    l_pos_x, l_pos_y, l_pos_z, l_progress = get_track(path.format("Left_Drive"))
+    r_pos_x, r_pos_y, r_pos_z, r_progress = get_track(path.format("Right_Drive"))
 
-reward_gates = [[613, 268, 613, 156], [546, 272, 465, 168], [483, 298, 368, 179], [411, 316, 301, 248], [363, 342, 231, 306], [324, 393, 189, 381], [299, 447, 189, 473], [291, 517, 187, 568], [305, 585, 213, 647], [213, 710, 325, 708], [222, 816, 352, 772], [260, 927, 359, 840], [361, 971, 416, 858], [475, 979, 490, 852], [578, 980, 578, 880], [643, 979, 646, 869], [718, 984, 713, 870], [778, 979, 787, 887], [852, 978, 876, 877], [958, 983, 972, 867], [1040, 976, 1051, 883], [1095, 977, 1126, 860], [1159, 983, 1191, 871], [1222, 980, 1240, 877], [1284, 973, 1297, 877], [1367, 980, 1374, 884], [1452, 975, 1445, 883], [1540, 967, 1507, 873], [1626, 929, 1577, 822], [1716, 835, 1630, 771], [1733, 736, 1646, 703], [1618, 667, 1716, 602], [1598, 611, 1681, 526], [1547, 554, 1597, 441], [1467, 528, 1495, 423], [1392, 529, 1370, 422], [1323, 541, 1256, 450], [1261, 575, 1175, 493], [1155, 642, 1087, 525], [1025, 678, 1026, 557], [923, 699, 930, 569], [807, 707, 841, 600], [701, 711, 746, 627], [611, 657, 720, 591], [719, 509, 809, 571], [862, 542, 813, 480], [932, 521, 919, 445], [1030, 473, 966, 378], [1113, 454, 1065, 364], [1215, 386, 1102, 330], [1099, 298, 1225, 260], [1047, 287, 1087, 191], [949, 288, 958, 187], [856, 284, 854, 179], [761, 275, 759, 167]]
+    scaling_factor  = 0.5
+    sample_rate = 300
 
-downScaleFactor = 1.1
+    walls = []
 
-for i in range(len(map)):
-    for j in range(len(map[i])):
-        map[i][j] = map[i][j]/downScaleFactor
-        map[i][0] -= 20
-        map[i][2] -= 20
+    l_min_x = np.min(l_pos_x)
+    l_min_y = np.min(l_pos_y)
+    r_min_x = np.min(r_pos_x)
+    r_min_y = np.min(r_pos_y)
 
-for i in range(len(reward_gates)):
-    for j in range(len(reward_gates[i])):
-        reward_gates[i][j] = reward_gates[i][j]/downScaleFactor
-        reward_gates[i][0] -= 20
-        reward_gates[i][2] -= 20
+    GLOBAL_OFFSET_X = np.min([l_min_x, r_min_x])
+    GLOBAL_OFFSET_Y = np.min([l_min_y, r_min_y])
 
+    visualized_l_pos_x = (l_pos_x[::sample_rate] - GLOBAL_OFFSET_X)*GLOBAL_SCALING_FACTOR
+    visualized_l_pos_y = (l_pos_y[::sample_rate] - GLOBAL_OFFSET_Y)*GLOBAL_SCALING_FACTOR
+    visualized_r_pos_x = (r_pos_x[::sample_rate] - GLOBAL_OFFSET_X)*GLOBAL_SCALING_FACTOR
+    visualized_r_pos_y = (r_pos_y[::sample_rate] - GLOBAL_OFFSET_Y)*GLOBAL_SCALING_FACTOR
+    visualized_l_progress = l_progress[::sample_rate]
+    visualized_r_progress = r_progress[::sample_rate]
+
+    visualized_l_pos_x = visualized_l_pos_x.astype(np.int64)
+    visualized_l_pos_y = visualized_l_pos_y.astype(np.int64)
+    visualized_r_pos_x = visualized_r_pos_x.astype(np.int64)
+    visualized_r_pos_y = visualized_r_pos_y.astype(np.int64)
+
+    WINDOW_W = int(np.max([np.max(visualized_l_pos_x), np.max(visualized_r_pos_x)]))
+    WINDOW_H = int(np.max([np.max(visualized_l_pos_y), np.max(visualized_r_pos_y)]))
+
+    for idx in range(len(visualized_l_pos_x) -1):
+        x1 = visualized_l_pos_x[idx]; y1 = visualized_l_pos_y[idx]
+        x2 = visualized_l_pos_x[idx + 1]; y2 = visualized_l_pos_y[idx + 1]
+        walls.append([x1, y1, x2, y2])
+
+    for idx in range(len(visualized_r_pos_x) -1):
+        x1 = visualized_r_pos_x[idx]; y1 = visualized_r_pos_y[idx]
+        x2 = visualized_r_pos_x[idx + 1]; y2 = visualized_r_pos_y[idx + 1]
+        walls.append([x1, y1, x2, y2])
+
+    INITIAL_POSITION = [l_pos_x[0], l_pos_y[0]]
+    map = walls
 
 class Drifting(gym.Env):
     metadata = {
@@ -108,9 +161,10 @@ class Drifting(gym.Env):
 
     def __init__(self):
         self.screen = None
+        self.map_surf = None
         self.surf = None
         self.clock = None
-        self.pos = [650, 200]
+        self.pos = INITIAL_POSITION #[650, 200]
         self.velX = 0
         self.velY = 0
         self.drag = 0.0
@@ -126,19 +180,30 @@ class Drifting(gym.Env):
         self.states = 12
         self.actions = 9
 
+        self.action = [0,0,0]
         self.state = None
         self.reward = None
         self.ray_casting = []
 
+    def _angle_normalize(self, angle):
+        # reduce the angle
+        pi2 = math.pi*2
+
+        angle =  angle % pi2; 
+
+        # force it to be the positive remainder, so that 0 <= angle < 360  
+        angle = (angle + pi2) % pi2;  
+
+        # force into the minimum absolute value residue class, so that -180 < angle <= 180  
+        if (angle > math.pi):
+            angle -= pi2
+
+        return angle
+
     def step(self, action):
+        self.action = action
         self.turn(action[0])
         self.acc(action[1])
-
-        # if action[1] > 0:
-        #     self.acc(action[1])
-
-        # if action[2] > 0:
-        #     self.decc(action[1])
 
         self.pos[0] += self.velX
         self.pos[1] += self.velY
@@ -146,31 +211,119 @@ class Drifting(gym.Env):
         self.velX *= self.drag
         self.velY *= self.drag
         self.angle += self.angularVel
+        self.angle = self._angle_normalize(self.angle)
         self.angularVel *= self.angularDrag
         reward = -0.01
 
         ded = False
+        # for i in map:
+        #     if self.checkCol(i):
+        #         ded = True
+        #         break
+        
+        if DEFAULT_MAP:
+            if (self.checkCol(reward_gates[self.on])):
+                self.on += 1
+                reward = 1
 
-        for i in map:
-            if self.checkCol(i):
-                ded = True
-                break
-
-        if (self.checkCol(reward_gates[self.on])):
-            self.on += 1
-            reward = 1
-
-        if (self.on > len(reward_gates) - 1):
-            self.on = 0
+            if (self.on > len(reward_gates) - 1):
+                self.on = 0
 
         if (ded):
             reward = -1
             
-        state = self.getState()
+        state = None #self.getState()
         self.state = state
         self.reward = reward
         
         return state, reward, ded, None
+
+    def _render_global(self):
+        for LINE in map:
+            gfxdraw.line(self.surf, LINE[0], LINE[1], LINE[2], LINE[3], np.array([0, 0, 0]))
+
+        center_x = (self.pos[0] - GLOBAL_OFFSET_X)*GLOBAL_SCALING_FACTOR
+        center_y = (self.pos[1] - GLOBAL_OFFSET_Y)*GLOBAL_SCALING_FACTOR
+        gfxdraw.filled_circle(self.surf, int(center_x), int(center_y), 2, np.array([255, 0, 0]))
+
+    def _render_local(self, screen_x, screen_y):
+        x, y = self.pos
+
+        ## Get map in fov range
+        sample_rate = 10
+        l_distance = np.sqrt(np.power(l_pos_x - x, 2) + np.power(l_pos_y - y, 2))
+        r_distance = np.sqrt(np.power(r_pos_x - x, 2) + np.power(r_pos_y - y, 2))
+
+        l_in_fov_index = np.where(l_distance < LOCAL_FOV_RANGE)
+        r_in_fov_index = np.where(r_distance < LOCAL_FOV_RANGE)
+
+        fov_l_pos_x = l_pos_x[l_in_fov_index]
+        fov_l_pos_y = l_pos_y[l_in_fov_index]
+        fov_r_pos_x = r_pos_x[r_in_fov_index]
+        fov_r_pos_y = r_pos_y[r_in_fov_index]
+
+        ## Offset
+        offset_fov_l_pos_x = (fov_l_pos_x - x)*LOCAL_SCALING_FACTOR + LOCAL_FOV_RANGE/2
+        offset_fov_l_pos_y = (fov_l_pos_y - y)*LOCAL_SCALING_FACTOR + LOCAL_FOV_RANGE/2
+        offset_fov_r_pos_x = (fov_r_pos_x - x)*LOCAL_SCALING_FACTOR + LOCAL_FOV_RANGE/2
+        offset_fov_r_pos_y = (fov_r_pos_y - y)*LOCAL_SCALING_FACTOR + LOCAL_FOV_RANGE/2
+           
+        visualized_fov_l_pos_x = (offset_fov_l_pos_x[::sample_rate]).astype(np.int64) + screen_x
+        visualized_fov_l_pos_y = (offset_fov_l_pos_y[::sample_rate]).astype(np.int64) + screen_y
+        visualized_fov_r_pos_x = (offset_fov_r_pos_x[::sample_rate]).astype(np.int64) + screen_x
+        visualized_fov_r_pos_y = (offset_fov_r_pos_y[::sample_rate]).astype(np.int64) + screen_y
+        
+        center_point_x = 0 + LOCAL_FOV_RANGE/2
+        center_point_x = int(center_point_x) + screen_x
+        center_point_y = 0 + LOCAL_FOV_RANGE/2
+        center_point_y = int(center_point_y) + screen_y
+        gfxdraw.filled_circle(self.surf, center_point_x, center_point_y, 2, np.array([255, 0, 0]))
+
+        for index in range(len(visualized_fov_l_pos_x)-1):
+            if (np.abs((visualized_fov_l_pos_x[index] - visualized_fov_l_pos_x[index + 1])) + \
+                np.abs((visualized_fov_l_pos_y[index] - visualized_fov_l_pos_y[index + 1]))) > 50:
+                continue
+
+            gfxdraw.line(self.surf, visualized_fov_l_pos_x[index], visualized_fov_l_pos_y[index], 
+                                    visualized_fov_l_pos_x[index + 1], visualized_fov_l_pos_y[index + 1],
+                                    np.array([0, 0, 0]))
+
+            # gfxdraw.filled_circle(self.surf, visualized_fov_l_pos_x[index], visualized_fov_l_pos_y[index], 1, np.array([0, 0, 0]))
+        for index in range(len(visualized_fov_r_pos_x)-1):
+            if (np.abs((visualized_fov_r_pos_x[index] - visualized_fov_r_pos_x[index + 1])) + \
+                np.abs((visualized_fov_r_pos_y[index] - visualized_fov_r_pos_y[index + 1]))) > 50:
+                continue
+            gfxdraw.line(self.surf, visualized_fov_r_pos_x[index], visualized_fov_r_pos_y[index], 
+                                    visualized_fov_r_pos_x[index + 1], visualized_fov_r_pos_y[index + 1],
+                                    np.array([0, 0, 0]))
+            # gfxdraw.filled_circle(self.surf, visualized_fov_r_pos_x[index], visualized_fov_r_pos_y[index], 1, np.array([0, 0, 0]))
+
+        # Draw car
+        
+        # LIST = [[CAR_WIDTH, CAR_LENGTH, CAR_WIDTH, -CAR_LENGTH], [-CAR_WIDTH, CAR_LENGTH, -CAR_WIDTH, -CAR_LENGTH], [CAR_WIDTH, CAR_LENGTH, -5, CAR_LENGTH], [5, -CAR_LENGTH, -5, -CAR_LENGTH]]
+        LIST = [[CAR_WIDTH, CAR_LENGTH, CAR_WIDTH, -CAR_LENGTH], \
+                [-CAR_WIDTH, CAR_LENGTH, -CAR_WIDTH, -CAR_LENGTH], \
+                [CAR_WIDTH, CAR_LENGTH, -CAR_WIDTH, CAR_LENGTH], \
+                [CAR_WIDTH, -CAR_LENGTH, -CAR_WIDTH, -CAR_LENGTH]]
+
+        HEADING = [0, CAR_LENGTH*0.8]
+
+        verts = []
+        for i in LIST:
+            LINE = np.array(self.rotatePos(i[0], i[1], i[2], i[3], self.angle)) - np.array([x, y, x, y])
+            LINE = (LINE*LOCAL_SCALING_FACTOR + LOCAL_FOV_RANGE/2).astype(np.int64) + np.array([screen_x, screen_y, screen_x, screen_y])
+            gfxdraw.line(self.surf, LINE[0], LINE[1], LINE[2], LINE[3], np.array([255, 0, 0]))
+            verts.append((LINE[0], LINE[1]))
+            verts.append((LINE[2], LINE[3]))
+
+        gfxdraw.aapolygon(self.surf, verts, np.array([255, 0, 0]))
+        gfxdraw.filled_polygon(self.surf, verts, np.array([255, 0, 0]))
+
+        LINE = np.array(self.rotatePos(HEADING[0], HEADING[1], HEADING[0], HEADING[1], self.angle)) - np.array([x, y, x, y])
+        LINE = (LINE*LOCAL_SCALING_FACTOR + LOCAL_FOV_RANGE/2).astype(np.int64) + np.array([screen_x, screen_y, screen_x, screen_y])
+        gfxdraw.filled_circle(self.surf, LINE[0], LINE[1], 2, np.array([0, 255, 0]))
+
+
 
     def render(self, mode: str = "human"):
         import pygame
@@ -182,92 +335,76 @@ class Drifting(gym.Env):
             pygame.init()
             pygame.display.init()
 
-            self.screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
+            self.screen = pygame.display.set_mode((WINDOW_W, WINDOW_H*2))
 
         if self.clock is None:
             self.clock = pygame.time.Clock()          
         
-        self.surf = pygame.Surface((WINDOW_W, WINDOW_H))
+        self.surf = pygame.Surface((WINDOW_W, WINDOW_H*2))
         field = [
-            (WINDOW_W, WINDOW_H),
-            (WINDOW_W, -WINDOW_H),
-            (-WINDOW_W, -WINDOW_H),
-            (-WINDOW_W, WINDOW_H),
+            (WINDOW_W, WINDOW_H*2),
+            (WINDOW_W, -WINDOW_H*2),
+            (-WINDOW_W, -WINDOW_H*2),
+            (-WINDOW_W, WINDOW_H*2),
         ]
         gfxdraw.filled_polygon(self.surf, field, np.array([102, 204, 102]))
 
-        LIST = [[5, 10, 5, -10], [-5, 10, -5, -10], [5, 10, -5, 10], [5, -10, -5, -10]]
-        verts = []
-        for i in LIST:
-            LINE = [int(v) for v in self.rotatePos(i[0], i[1], i[2], i[3], self.angle)]
+        self._render_global()
+        self._render_local(int(WINDOW_W*0.25), int(WINDOW_H*1.25))
+      
+        font = pygame.font.Font(pygame.font.get_default_font(), 24)
+        text = font.render("Pos: {:.2f} - {:.2f}".format(self.pos[0], self.pos[1]), \
+                            True, (255, 255, 255), (0, 0, 0))
+        text_rect = text.get_rect()
+        text_rect.center = (int(WINDOW_W*0.75), int(WINDOW_H*1.25))
+        self.surf.blit(text, text_rect)
 
-            gfxdraw.line(self.surf, LINE[0], LINE[1], LINE[2], LINE[3], np.array([255, 0, 0]))
-            # self.viewer.draw_line([LINE[0], LINE[1]], [LINE[2], LINE[3]], color=(255, 0, 0))
-            verts.append((LINE[0], LINE[1]))
-            verts.append((LINE[2], LINE[3]))
-
-        color = np.array([0.0, 0.0, 0.0])
-        gfxdraw.aapolygon(self.surf, verts, color)
-        gfxdraw.filled_polygon(self.surf, verts, color)
-
-        for LINE in map:
-            LINE = [int(v) for v in LINE]
-
-            gfxdraw.line(self.surf, LINE[0], LINE[1], LINE[2], LINE[3], np.array([0, 0, 0]))
-
-        for LINE in self.ray_casting:
-            gfxdraw.line(self.surf, int(LINE[0]), int(LINE[1]), int(LINE[2]), int(LINE[3]), np.array([255, 0, 0]))
+        text = font.render("Acceleration: {} - Steering: {}".format(self.action[1], self.action[0]), \
+                            True, (255, 255, 255), (0, 0, 0))
+        text_rect = text.get_rect()
+        text_rect.center = (int(WINDOW_W*0.75), int(WINDOW_H*1.5))
+        self.surf.blit(text, text_rect)
 
         pygame.event.pump()
         self.clock.tick(self.metadata["render_fps"])
         self.screen.fill(0)
         self.screen.blit(self.surf, (0, 0))
+
         pygame.display.flip()
 
         return True
 
     def reset(self):
-
-        self.pos = [650, 200]
+        self.pos = INITIAL_POSITION
         self.velX = 0
         self.velY = 0
         self.drag = 0.9
         self.angularVel = 0.0
         self.angularDrag = 0.6
-        self.power = 0.7
+        self.power = 0.5
         self.turnSpeed = 0.04
         self.angle = math.radians(-90)
         self.w = 10
         self.h = 20
         self.on = 0
 
-        return self.getState()
+        return True #self.getState()
 
     def acc(self, value):
-        self.velX += math.sin(self.angle) * value #self.power
-        self.velY += math.cos(self.angle) * value #self.power
+        self.velX += math.sin(self.angle) * value * self.power
+        self.velY += math.cos(self.angle) * value * self.power
 
-        if (self.velX > 10):
-            self.velX = 10
+        # if (self.velX > 10):
+        #     self.velX = 10
 
-        if (self.velY > 10):
-            self.velY = 10
+        # if (self.velY > 10):
+        #     self.velY = 10
 
-        if (self.velX < -10):
-            self.velX = -10
+        # if (self.velX < -10):
+        #     self.velX = -10
 
-        if (self.velY < -10):
-            self.velY = -10
-
-    # def decc(self, value):
-    #     self.velX -= math.sin(self.angle) * self.power
-    #     self.velY -= math.cos(self.angle) * self.power
-
-    #     if (self.velX < -10):
-    #         self.velX = -10
-
-    #     if (self.velY < -10):
-    #         self.velY = -10
+        # if (self.velY < -10):
+        #     self.velY = -10
 
     def turn(self, value):
         self.angularVel += value*self.turnSpeed
@@ -333,8 +470,6 @@ class Drifting(gym.Env):
         return [New_X, New_Y, New_X2, New_Y2]
 
     def getState(self):
-        from pygame import gfxdraw
-
         range = 10000
         LIST = [[0, 0, range, 0], [0, 0, -range, 0], [0, 0, -range, range], [0, 0, 0, range], [0, 0, range, range]]
         DS = []
@@ -366,7 +501,11 @@ class Drifting(gym.Env):
                 DS.append(-1)
 
         # ---------------
-        e = [reward_gates[self.on]]
+        if DEFAULT_MAP:
+            e = [reward_gates[self.on]]
+        else:
+            e = []
+
         for i in bongs:
             closest = 10000000
             closesIN = []
@@ -443,9 +582,9 @@ if __name__ == "__main__":
             register_input()
             s, r, done, info = env.step(a)
             total_reward += r
-            if steps % 200 == 0 or done:
-                print("\naction " + str([f"{x:+0.2f}" for x in a]))
-                print(f"step {steps} total_reward {total_reward:+0.2f}")
+            # if steps % 200 == 0 or done:
+            #     print("\naction " + str([f"{x:+0.2f}" for x in a]))
+            #     print(f"step {steps} total_reward {total_reward:+0.2f}")
             steps += 1
             isopen = env.render()
             if done or restart or isopen is False:

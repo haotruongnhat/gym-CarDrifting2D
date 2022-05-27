@@ -38,8 +38,11 @@ def get_track(path):
         session_collection[Fields.pos_z.value]
     )
 
+    progress = session_collection[Fields.progress.value]
+
+
     print("Total distance: {:2f} m".format(session_collection[Fields.distance.value][-1]))
-    return pos_x, pos_y, pos_z
+    return pos_x, -pos_y, pos_z, progress
 
 class Fields(Enum):
     run_time =            0
@@ -109,12 +112,49 @@ class Fields(Enum):
     idle_rpm =            64  # / 10
     max_gears =           65
 
+def find_nearest_idx(value, array):
+    idx = np.abs(array - value).argmin()
+    return idx
+
 if __name__ == "__main__":
-    l_pos_x, l_pos_y, l_pos_z = get_track("map_data\\GR, Argolis, Fourketa Kourva - 562.1s - Left Drive.npz")
-    r_pos_x, r_pos_y, r_pos_z = get_track("map_data\\GR, Argolis, Fourketa Kourva - 507.3s - Right Drive.npz")
+    l_pos_x, l_pos_y, l_pos_z, l_progress = get_track("map_data\\GR_Argolis_Fourketa Kourva_Left_Drive.npz")
+    r_pos_x, r_pos_y, r_pos_z, r_progress = get_track("map_data\\GR_Argolis_Fourketa Kourva_Right_Drive.npz")
+
+    ## Pacenotes
+    pacenotes = []
+    with open("map_data\\GR_Argolis_Fourketa Kourva_pacenotes.txt", "r") as f:
+        commands = f.read().strip().split("\n")
+        pacenotes = [(float(c.strip().split(" ")[0]), c.strip().split(" ")[1]) for c in commands[:-1]]
 
     sample_rate = 10
+    skip_idx = 0
 
-    plt.plot(l_pos_x[::sample_rate], l_pos_y[::sample_rate], c='k')
-    plt.plot(r_pos_x[::sample_rate], r_pos_y[::sample_rate], c='k')
+    l_min_x = np.min(l_pos_x)
+    l_min_y = np.min(l_pos_y)
+    r_min_x = np.min(r_pos_x)
+    r_min_y = np.min(r_pos_y)
+
+    min_x = np.min([l_min_x, r_min_x])
+    min_y = np.min([l_min_y, r_min_y])
+
+    scaling_factor = 0.5
+
+    visualized_l_pos_x = (l_pos_x[skip_idx::sample_rate] - min_x)*scaling_factor
+    visualized_l_pos_y = (l_pos_y[skip_idx::sample_rate] - min_y)*scaling_factor
+    visualized_r_pos_x = (r_pos_x[skip_idx::sample_rate] - min_x)*scaling_factor
+    visualized_r_pos_y = (r_pos_y[skip_idx::sample_rate] - min_y)*scaling_factor
+    visualized_l_progress = l_progress[skip_idx::sample_rate]
+    visualized_r_progress = r_progress[skip_idx::sample_rate]
+
+    plt.plot(visualized_l_pos_x, visualized_l_pos_y, c='k')
+    plt.plot(visualized_r_pos_x, visualized_r_pos_y, c='k')
+
+    for prog, command in pacenotes:
+        l_idx = find_nearest_idx(prog, visualized_l_progress)
+        r_idx = find_nearest_idx(prog, visualized_r_progress)
+
+        plt.plot([visualized_l_pos_x[l_idx], visualized_r_pos_x[r_idx]], [visualized_l_pos_y[l_idx], visualized_r_pos_y[r_idx]], c="green", linewidth=2)
+
     plt.show()
+
+
